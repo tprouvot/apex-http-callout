@@ -156,7 +156,8 @@ Custom setting records are data: they are not deployed with the metadata. Load t
 | Header | Where | Why |
 | --- | --- | --- |
 | Credentials: `Authorization`, API keys, subscription keys, tokens, signatures | **External Credential**: its authentication protocol, or a custom header whose value references a principal parameter, e.g. `{!$Credential.ErpApiCred.ApiKey}`. The reference is only replaced by the secret when **Allow Formulas in HTTP Header** is checked on the Named Credential; otherwise the text `{!$Credential...}` itself is sent. | Encrypted, never visible in Apex, in the custom setting or in the logs. Who can use it is controlled by permission sets through the principal. |
-| Non-critical headers: `Accept`, `Content-Type`, `X-Correlation-Id`, API version, tenant... | **`CalloutSettings__c`**, `Header*__c` / `Value*__c` | Set per callout, not per Named Credential, and easy to change without touching the credential setup |
+| Non-critical headers shared by every endpoint of the API: `X-Tenant`, `X-Api-Version`, `User-Agent`... | **Named Credential**: custom header | Set once instead of in every `CalloutSettings__c` record. Named Credentials are metadata, so these headers can be deployed and versioned, unlike custom setting records. |
+| Non-critical headers specific to one endpoint: `Content-Type`, `Accept`, `SOAPAction`, `X-Correlation-Id`... | **`CalloutSettings__c`**, `Header*__c` / `Value*__c` | Set per callout: a Named Credential header applies to every callout that uses it. Also the only place for headers when the callout uses a full URL instead of a Named Credential. A record header replaces a Named Credential header with the same name, so a record can override a shared header for one endpoint. |
 
 Do not put secrets in `Value*__c`: they are stored in plain text and visible to admins and in data exports. They are masked in the logs (see [Sensitive data in the logs](#sensitive-data-in-the-logs)), but that does not protect them anywhere else.
 
@@ -168,7 +169,10 @@ Tested on API version 68.0 with an echo endpoint. When the same header name is d
 2. **Named Credential** custom header
 3. **External Credential** custom header
 
-So a `Header*__c` in `CalloutSettings__c` silently **replaces** the header of the External Credential, `Authorization` included. Never configure in `CalloutSettings__c` a header that the External Credential or the Named Credential already sends: the secret would be replaced by the plain-text value.
+So a `Header*__c` in `CalloutSettings__c` silently **replaces** a header with the same name on the Named Credential or the External Credential, `Authorization` included.
+
+- For a credential header, this is a mistake: the secret is replaced by the plain-text value. Never configure in `CalloutSettings__c` a header that carries a credential.
+- For a non-critical header shared on the Named Credential, such as `X-Api-Version`, this can be intended: one record overrides it for one endpoint.
 
 Named Credential and External Credential custom header values are sent exactly as typed: do not wrap a literal in quotes.
 
