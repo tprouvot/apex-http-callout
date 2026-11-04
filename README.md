@@ -29,7 +29,7 @@ This framework was designed and written by **Nicolas Greard**. This repo package
 | --- | --- |
 | [HttpRequestUtils.cls](force-app/main/default/classes/HttpRequestUtils.cls) | The framework class |
 | [HttpRequestUtilsTest.cls](force-app/main/default/classes/HttpRequestUtilsTest.cls) | Unit tests with an `HttpCalloutMock`. They pass with and without Nebula. |
-| [CalloutSettings__c](force-app/main/default/objects/CalloutSettings__c) | List custom setting: one record per callout |
+| [CalloutSettings__c](force-app/main/default/objects/CalloutSettings__c) | List custom setting: one record per callout, with the **All Callouts** list view |
 | [scripts/deploy.sh](scripts/deploy.sh) | Deploys with or without [Nebula Logger](https://github.com/jongpie/NebulaLogger) |
 
 ## Guided tour
@@ -52,9 +52,9 @@ The Named Credential **Demo ERP API** (`DemoErpApi`) holds the base URL and uses
 
 ### 3. One CalloutSettings__c record per callout
 
-Setup > Custom Settings > Callout Settings > **Manage**. Two callouts use the same Named Credential:
+Setup > Custom Settings > Callout Settings > **Manage**. The **All Callouts** list view, deployed with the repo, shows each callout's Named Credential, endpoint, timeout and header names. Header values are left out on purpose. Here, two callouts use the same Named Credential:
 
-![List of CalloutSettings__c records: OrderStatus and PriceSimulation](docs/images/03-callout-settings.png)
+![All Callouts list view of CalloutSettings__c: OrderStatus and PriceSimulation with their Named Credential, endpoint, timeout and header names](docs/images/03-callout-settings.png)
 
 `OrderStatus` adds the path `get?order={0}`, a 10-second timeout and two non-secret headers. The API key is not here: it comes from the External Credential.
 
