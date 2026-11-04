@@ -30,7 +30,7 @@ This framework was designed and written by **Nicolas Greard**. This repo package
 | [HttpRequestUtils.cls](force-app/main/default/classes/HttpRequestUtils.cls) | The framework class |
 | [HttpRequestUtilsTest.cls](force-app/main/default/classes/HttpRequestUtilsTest.cls) | Unit tests with an `HttpCalloutMock`. They pass with and without Nebula. |
 | [CalloutSettings__c](force-app/main/default/objects/CalloutSettings__c) | List custom setting: one record per callout |
-| [scripts/deploy.sh](scripts/deploy.sh) | Deploys with or without Nebula Logger |
+| [scripts/deploy.sh](scripts/deploy.sh) | Deploys with or without [Nebula Logger](https://github.com/jongpie/NebulaLogger) |
 
 ## Guided tour
 
@@ -195,7 +195,7 @@ Errors to handle in the caller:
 
 ## Nebula Logger (optional)
 
-Every Nebula Logger line in the sources is committed **commented out**, and starts with the marker `// [nebula] `:
+Every [Nebula Logger](https://github.com/jongpie/NebulaLogger) line in the sources is committed **commented out**, and starts with the marker `// [nebula] `:
 
 ```apex
 // [nebula] Logger.error(settingName + ' ' + loggingMessage).setHttpRequestDetails(req).setHttpResponseDetails(res).addTag('Callout: ' + settingName);
@@ -221,7 +221,7 @@ The sources are never modified: `--with-nebula` works on the `.build/` copy, whi
 
 Requirements for `--with-nebula`:
 
-- The **unlocked** Nebula Logger package (no namespace), v4.13.1 or later: `setHttpRequestDetails` and `setHttpResponseDetails` appeared in that version. The managed package (namespace `Nebula`) is not supported, because the code calls `Logger`, not `Nebula.Logger`.
+- The **unlocked** [Nebula Logger](https://github.com/jongpie/NebulaLogger) package (no namespace), v4.13.1 or later: `setHttpRequestDetails` and `setHttpResponseDetails` appeared in that version. The managed package (namespace `Nebula`) is not supported, because the code calls `Logger`, not `Nebula.Logger`.
 - The caller must call `Logger.saveLog()`. `HttpRequestUtils` adds log entries but never saves them. If a `CalloutException` is rethrown and nobody catches it, the entries are lost.
 
 What is logged when Nebula is on:
