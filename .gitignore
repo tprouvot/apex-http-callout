@@ -1,0 +1,15 @@
+# Salesforce CLI
+.sf/
+.sfdx/
+.localdevserver/
+
+# Build copy made by scripts/deploy.sh --with-nebula
+.build/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log

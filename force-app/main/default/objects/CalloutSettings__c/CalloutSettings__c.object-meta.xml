@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+	<customSettingsType>List</customSettingsType>
+	<description>Outbound HTTP callouts made by HttpRequestUtils, one record per callout. The record Name is the setting name passed to HttpRequestUtils.getHttpResponse. Holds the endpoint, the Named Credential, the timeout and up to 6 static headers.</description>
+	<enableFeeds>false</enableFeeds>
+	<label>Callout Settings</label>
+	<visibility>Public</visibility>
+</CustomObject>

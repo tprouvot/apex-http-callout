@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+	<fullName>Value3__c</fullName>
+	<description>Value of the HTTP header named in Header3__c. Ignored when Header3__c is blank. Stored in plain text: never put a secret here, use the Named Credential. Masked in the logs unless Header3__c is a standard non-secret header such as Accept or Content-Type.</description>
+	<encryptionScheme>None</encryptionScheme>
+	<externalId>false</externalId>
+	<label>Header 3 Value</label>
+	<length>255</length>
+	<required>false</required>
+	<trackTrending>false</trackTrending>
+	<type>Text</type>
+	<unique>false</unique>
+</CustomField>

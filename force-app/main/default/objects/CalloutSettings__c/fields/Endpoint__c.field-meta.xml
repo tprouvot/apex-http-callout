@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+	<fullName>Endpoint__c</fullName>
+	<description>With a Named Credential: the path after its URL, without a leading / (one is added). Without one: the full URL, which needs a Remote Site Setting. May contain {0}, {1}... placeholders, filled in order from the endpointParams argument. The values are not URL-encoded.</description>
+	<encryptionScheme>None</encryptionScheme>
+	<externalId>false</externalId>
+	<label>Endpoint</label>
+	<length>255</length>
+	<required>false</required>
+	<trackTrending>false</trackTrending>
+	<type>Text</type>
+	<unique>false</unique>
+</CustomField>

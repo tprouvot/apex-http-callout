@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+	<fullName>Header5__c</fullName>
+	<description>Name of HTTP header 5, for example Content-Type. Its value is Value5__c. Leave blank to skip this header. Do not use it for credentials (Authorization, API keys, tokens): set those on the Named Credential.</description>
+	<encryptionScheme>None</encryptionScheme>
+	<externalId>false</externalId>
+	<label>Header 5 Name</label>
+	<length>255</length>
+	<required>false</required>
+	<trackTrending>false</trackTrending>
+	<type>Text</type>
+	<unique>false</unique>
+</CustomField>
