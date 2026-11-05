@@ -8,11 +8,11 @@ This framework was designed and written by **Nicolas Greard**. This repo package
 
 ## How it works
 
-`HttpRequestUtils.getHttpResponse(settingName, endpointParams, method, body, loggingMessage)`:
+`HttpRequestUtils.getHttpResponse(settingName, endpointParams, method, body, loggingMessage)`, with an optional sixth parameter `requestHeaders`:
 
 1. Reads the `CalloutSettings__c` record named `settingName`. If there is none, throws `HttpRequestUtils.CalloutConfigException`.
 2. Builds the endpoint. If `endpointParams` is given, `Endpoint__c` is a template with `{0}`, `{1}`... placeholders filled by `String.format`.
-3. Sets headers from the `Header1__c`/`Value1__c` to `Header6__c`/`Value6__c` pairs. Pairs with a blank header name are skipped.
+3. Sets headers from the `Header1__c`/`Value1__c` to `Header6__c`/`Value6__c` pairs. Pairs with a blank header name are skipped. Then sets the `requestHeaders`, if any: a header given there replaces a record header with the same name.
 4. Sets the timeout from `Timeout__c`, kept within what Apex accepts (see [Configure a callout](#configure-a-callout)), and the method from `method`. The body is only set when the method is `POST`.
 5. Sets the final URL:
    - `NamedCredentialApiName__c` blank: `Endpoint__c` is used as a full URL, which needs a Remote Site Setting.
@@ -157,7 +157,8 @@ Custom setting records are data: they are not deployed with the metadata. Load t
 | --- | --- | --- |
 | Credentials: `Authorization`, API keys, subscription keys, tokens, signatures | **External Credential**: its authentication protocol, or a custom header whose value references a principal parameter, e.g. `{!$Credential.ErpApiCred.ApiKey}`. The reference is only replaced by the secret when **Allow Formulas in HTTP Header** is checked on the Named Credential; otherwise the text `{!$Credential...}` itself is sent. | Encrypted, never visible in Apex, in the custom setting or in the logs. Who can use it is controlled by permission sets through the principal. |
 | Non-critical headers shared by every endpoint of the API: `X-Tenant`, `X-Api-Version`, `User-Agent`... | **Named Credential**: custom header | Set once instead of in every `CalloutSettings__c` record. Named Credentials are metadata, so these headers can be deployed and versioned, unlike custom setting records. |
-| Non-critical headers specific to one endpoint: `Content-Type`, `Accept`, `SOAPAction`, `X-Correlation-Id`... | **`CalloutSettings__c`**, `Header*__c` / `Value*__c` | Set per callout: a Named Credential header applies to every callout that uses it. Also the only place for headers when the callout uses a full URL instead of a Named Credential. A record header replaces a Named Credential header with the same name, so a record can override a shared header for one endpoint. |
+| Non-critical headers specific to one endpoint: `Content-Type`, `Accept`, `SOAPAction`... | **`CalloutSettings__c`**, `Header*__c` / `Value*__c` | Set per callout: a Named Credential header applies to every callout that uses it. Also the only place for headers when the callout uses a full URL instead of a Named Credential. A record header replaces a Named Credential header with the same name, so a record can override a shared header for one endpoint. |
+| Non-critical headers whose value changes on each request: `Idempotency-Key`, `X-Correlation-Id`, `X-Request-Id`... | **Apex**: the `requestHeaders` parameter | The value is only known when the call is made. A header given there replaces a record header with the same name. Never pass a credential there. |
 
 Do not put secrets in `Value*__c`: they are stored in plain text and visible to admins and in data exports. They are masked in the logs (see [Sensitive data in the logs](#sensitive-data-in-the-logs)), but that does not protect them anywhere else.
 
@@ -165,7 +166,7 @@ Do not put secrets in `Value*__c`: they are stored in plain text and visible to 
 
 Tested on API version 68.0 with an echo endpoint. When the same header name is defined in more than one place, only one value is sent, chosen in this order:
 
-1. **Apex**: `CalloutSettings__c` headers, set with `req.setHeader`
+1. **Apex**: `requestHeaders`, then `CalloutSettings__c` headers, both set with `req.setHeader`
 2. **Named Credential** custom header
 3. **External Credential** custom header
 
@@ -187,6 +188,9 @@ if (res.getStatusCode() == 200) {
 
 // POST with a JSON body, no endpoint parameters
 HttpResponse res = HttpRequestUtils.getHttpResponse('PriceSimulation', null, 'POST', JSON.serialize(payload), '');
+
+// Same, with a header whose value changes on each request
+HttpResponse res = HttpRequestUtils.getHttpResponse('PriceSimulation', null, 'POST', JSON.serialize(payload), '', new Map<String, String>{ 'Idempotency-Key' => key });
 ```
 
 `loggingMessage` is added to the Nebula log message after the setting name. Use it to identify the business record, e.g. `'order: ' + orderNumber`.
@@ -301,4 +305,4 @@ The main points:
 
 - The body is only sent for `POST`.
 - Endpoint parameters are not URL-encoded.
-- At most 6 headers per callout.
+- At most 6 headers per callout in `CalloutSettings__c`, plus any number in `requestHeaders`.
