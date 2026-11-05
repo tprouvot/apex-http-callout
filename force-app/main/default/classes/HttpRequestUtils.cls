@@ -51,6 +51,25 @@ public inherited sharing class HttpRequestUtils {
 	 * @throws System.CalloutException when the callout fails (timeout, DNS, TLS...), after logging it
 	 */
 	public static HTTPResponse getHttpResponse(String settingName, List<String> endpointParams, String method, String reqBody, String loggingMessage) {
+		return getHttpResponse(settingName, endpointParams, method, reqBody, loggingMessage, null);
+	}
+
+	/**
+	 * @description Same as the five-parameter version, plus headers whose value changes on each request,
+	 * such as Idempotency-Key or X-Correlation-Id. They are set after the CalloutSettings__c headers, so a
+	 * header given here replaces a record header with the same name. Never pass a credential here: it
+	 * belongs in the External Credential.
+	 * @param settingName Name of the CalloutSettings__c record to use (endpoint, Named Credential, timeout, headers)
+	 * @param endpointParams values for the {0}, {1}... placeholders of Endpoint__c, not URL-encoded. Null when there are none.
+	 * @param method HTTP method, for example GET or POST
+	 * @param reqBody request body, sent only when method is POST
+	 * @param loggingMessage text added after the setting name in the Nebula log entries, for example to identify the business record
+	 * @param requestHeaders header name to value, for this request only. Blank names are skipped. Null when there are none.
+	 * @return the HTTPResponse, also when the status is 400 or above: the caller checks the status code
+	 * @throws CalloutConfigException when no CalloutSettings__c record is named settingName
+	 * @throws System.CalloutException when the callout fails (timeout, DNS, TLS...), after logging it
+	 */
+	public static HTTPResponse getHttpResponse(String settingName, List<String> endpointParams, String method, String reqBody, String loggingMessage, Map<String, String> requestHeaders) {
 		HttpRequest req = new HttpRequest();
 		// Kept before anything can throw, so that getLastHttpRequest() never returns the request of a previous callout
 		request = req;
@@ -72,6 +91,16 @@ public inherited sharing class HttpRequestUtils {
 					String value = (String) settings.get(VALUE + i + API_NAME_SUFFIX);
 					req.setHeader(header, value);
 					// [nebula] Logger.fine(header + ' ' + getLoggableHeaderValue(header, value));
+				}
+			}
+			// Per-request headers last, so they win over a record header with the same name
+			if (requestHeaders != null) {
+				for (String header : requestHeaders.keySet()) {
+					if (String.isNotBlank(header)) {
+						String value = requestHeaders.get(header);
+						req.setHeader(header, value);
+						// [nebula] Logger.fine(header + ' ' + getLoggableHeaderValue(header, value));
+					}
 				}
 			}
 			req.setTimeout(getTimeout(settingName, settings.Timeout__c));

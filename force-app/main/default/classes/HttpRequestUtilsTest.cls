@@ -58,6 +58,49 @@ private class HttpRequestUtilsTest {
 	}
 
 	@IsTest
+	static void requestHeadersAreSentWithTheRecordHeaders() {
+		CalloutMock mock = new CalloutMock(200, '{"ok":true}');
+		Test.setMock(HttpCalloutMock.class, mock);
+
+		Test.startTest();
+		HttpRequestUtils.getHttpResponse(URL_SETTING, new List<String>{ 'A1', '2' }, 'POST', '{}', 'test', new Map<String, String>{ 'Idempotency-Key' => 'order-A1-1' });
+		Test.stopTest();
+
+		Assert.areEqual('order-A1-1', mock.lastRequest.getHeader('Idempotency-Key'), 'The request header is set');
+		Assert.areEqual('application/json', mock.lastRequest.getHeader('Content-Type'), 'The record headers are still set');
+		Assert.areEqual('apex-http-callout', mock.lastRequest.getHeader('X-Client'), 'Every record header is still set');
+	}
+
+	@IsTest
+	static void requestHeaderReplacesARecordHeaderWithTheSameName() {
+		CalloutMock mock = new CalloutMock(200, '{"ok":true}');
+		Test.setMock(HttpCalloutMock.class, mock);
+
+		Test.startTest();
+		HttpRequestUtils.getHttpResponse(URL_SETTING, new List<String>{ 'A1', '2' }, 'GET', '', 'test', new Map<String, String>{ 'X-Client' => 'batch-job' });
+		Test.stopTest();
+
+		Assert.areEqual('batch-job', mock.lastRequest.getHeader('X-Client'), 'The request header wins over Header3/Value3');
+	}
+
+	@IsTest
+	static void blankRequestHeaderNamesAndANullMapAreIgnored() {
+		CalloutMock mock = new CalloutMock(200, '{"ok":true}');
+		Test.setMock(HttpCalloutMock.class, mock);
+
+		Test.startTest();
+		HttpResponse withBlankName = HttpRequestUtils.getHttpResponse(NAMED_CREDENTIAL_SETTING, null, 'GET', '', 'test', new Map<String, String>{ ' ' => 'ignored', 'X-Request-Id' => 'r-1' });
+		HttpRequest firstRequest = mock.lastRequest;
+		HttpResponse withNullMap = HttpRequestUtils.getHttpResponse(NAMED_CREDENTIAL_SETTING, null, 'GET', '', 'test', null);
+		Test.stopTest();
+
+		Assert.areEqual(200, withBlankName.getStatusCode(), 'A blank header name is skipped instead of failing the callout');
+		Assert.areEqual('r-1', firstRequest.getHeader('X-Request-Id'), 'The other request headers are still set');
+		Assert.areEqual(200, withNullMap.getStatusCode(), 'A null map behaves like the five-parameter version');
+		Assert.isNull(mock.lastRequest.getHeader('X-Request-Id'), 'A request header is never kept for the next request');
+	}
+
+	@IsTest
 	static void errorStatusIsReturnedToTheCaller() {
 		Test.setMock(HttpCalloutMock.class, new CalloutMock(500, 'Server error'));
 
